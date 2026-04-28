@@ -390,7 +390,7 @@ export default function App() {
       <main className="flex-1 p-4 md:p-8">
         <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">{view === "settings" ? "הגדרות מערכת" : view === "retainers" ? "מעקב ריטיינרים" : view === "dashboard" ? "המשימות שלי" : selectedClientId === "all" ? "לקוחות ומשימות" : clients.find((c) => c.id === selectedClientId)?.name}</h1>
+            <h1 className="text-3xl font-bold">{view === "settings" ? "הגדרות מערכת" : view === "retainers" ? "מעקב ריטיינרים" : view === "dashboard" ? "המשימות שלי" : selectedClientId === "all" ? "לקוחות ומשימות" : clientById(clients, selectedClientId)?.name}</h1>
             <p className="text-sm text-slate-500">משימות, לקוחות, subtasks, משימות חוזרות וריטיינרים.</p>
           </div>
           <div className="flex gap-2">
@@ -440,7 +440,7 @@ export default function App() {
 
         {view === "clients" && (
           <div className="space-y-6">
-            {sidebarItems.filter((client) => !client.isGeneral && (selectedClientId === "all" || selectedClientId === client.id)).map((client) => {
+            {sidebarItems.filter((client) => selectedClientId === "all" ? !client.isGeneral : selectedClientId === client.id).map((client) => {
               const clientTasks = filteredTasks.filter((task) => task.clientId === client.id);
               const active = clientTasks.filter((task) => !task.completed);
               const completed = clientTasks.filter((task) => task.completed);
