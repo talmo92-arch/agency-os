@@ -241,6 +241,7 @@ export default function App() {
   const [inlineTask, setInlineTask] = useState(emptyTask(""));
   const sidebarItems = [generalClient, ...clients];
   const [inlineDetailsOpen, setInlineDetailsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -387,13 +388,23 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="flex-1 p-4 md:p-8">
+      <main className="flex-1 p-3 md:p-8">
         <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{view === "settings" ? "הגדרות מערכת" : view === "retainers" ? "מעקב ריטיינרים" : view === "dashboard" ? "המשימות שלי" : selectedClientId === "all" ? "לקוחות ומשימות" : clientById(clients, selectedClientId)?.name}</h1>
+          <div className="flex items-start justify-between gap-3 md:block">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="shrink-0 rounded-xl border bg-white px-3 py-2 text-lg shadow-sm xl:hidden"
+              aria-label="פתח תפריט"
+            >
+              ☰
+            </button>
+            <div className="min-w-0 flex-1">
+            <h1 className="truncate text-2xl font-bold md:text-3xl">{view === "settings" ? "הגדרות מערכת" : view === "retainers" ? "מעקב ריטיינרים" : view === "dashboard" ? "המשימות שלי" : selectedClientId === "all" ? "לקוחות ומשימות" : clientById(clients, selectedClientId)?.name}</h1>
             <p className="text-sm text-slate-500">משימות, לקוחות, subtasks, משימות חוזרות וריטיינרים.</p>
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
                 resetInline(selectedClientId !== "all" ? selectedClientId : clients[0]?.id);
@@ -512,6 +523,36 @@ export default function App() {
         )}
       </main>
 
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 xl:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <div className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-slate-950 p-5 text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-6 flex items-center justify-between">
+              <div className="text-sm font-semibold text-slate-300">תפריט</div>
+              <button type="button" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-2 py-1 text-slate-300 hover:bg-white/10">✕</button>
+            </div>
+            <NavButton active={view === "dashboard"} onClick={() => { setView("dashboard"); setSelectedClientId("all"); setMobileMenuOpen(false); }}>☑️ המשימות שלי</NavButton>
+            <NavButton active={view === "clients" && selectedClientId === "all"} onClick={() => { setView("clients"); setSelectedClientId("all"); setMobileMenuOpen(false); }}>👥 לקוחות</NavButton>
+            <NavButton active={view === "retainers"} onClick={() => { setView("retainers"); setSelectedClientId("all"); setMobileMenuOpen(false); }}>💰 ריטיינרים</NavButton>
+            <NavButton active={view === "settings"} onClick={() => { setView("settings"); setSelectedClientId("all"); setMobileMenuOpen(false); }}>⚙️ הגדרות מערכת</NavButton>
+            <div className="mb-3 mt-8 flex items-center justify-between text-xs font-semibold text-slate-400">
+              <span>לקוחות</span>
+              <button onClick={() => { openNewClient(); setMobileMenuOpen(false); }} className="rounded-lg px-2 py-1 text-lg leading-none text-slate-300 hover:bg-white/10">+</button>
+            </div>
+            <div className="space-y-2">
+              {sidebarItems.map((client) => {
+                const color = colorById(client.color);
+                return (
+                  <button key={client.id} onClick={() => { setView("clients"); setSelectedClientId(client.id); resetInline(client.id); setMobileMenuOpen(false); }} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right text-sm transition ${selectedClientId === client.id ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/10"}`}>
+                    <span className={`h-3 w-3 rounded-full ${color.dot}`} />
+                    <span className="truncate">{client.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {clientModalOpen && (
         <Modal title={editingClientId ? "עריכת לקוח" : "לקוח חדש"} onClose={() => setClientModalOpen(false)}>
           <Form label="שם לקוח"><input value={clientDraft.name} onChange={(e) => setClientDraft({ ...clientDraft, name: e.target.value })} className="input" /></Form>
@@ -548,9 +589,9 @@ function DateRecurringPicker({ task, onChange }) {
           <button type="button" className="fixed inset-0 z-40 cursor-default bg-transparent" onClick={() => setOpen(false)} aria-label="סגור לוח שנה" />
           <div className="absolute left-0 top-8 z-50 w-64 rounded-2xl border bg-white p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 flex items-center justify-between">
-              <button type="button" onClick={() => update({ due: moveMonth(task.due, -1) })} className="rounded-lg border px-2 py-1 text-xs hover:bg-slate-50">‹</button>
+              <button type="button" onClick={() => update({ due: moveMonth(task.due, -1) })} className="rounded-lg border px-3 py-2 text-xs hover:bg-slate-50 md:px-2 md:py-1"},{>‹</button>
               <div className="text-xs font-bold text-slate-800">{monthTitle(task.due)}</div>
-              <button type="button" onClick={() => update({ due: moveMonth(task.due, 1) })} className="rounded-lg border px-2 py-1 text-xs hover:bg-slate-50">›</button>
+              <button type="button" onClick={() => update({ due: moveMonth(task.due, 1) })} className="rounded-lg border px-3 py-2 text-xs hover:bg-slate-50 md:px-2 md:py-1"},{>›</button>
             </div>
             <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-medium text-slate-400">{weekDays.map((day) => <div key={day.id}>{day.label}</div>)}</div>
             <div className="grid grid-cols-7 gap-1 text-center text-xs">
@@ -602,24 +643,24 @@ function InlineTaskRow({ clients, draft, setDraft, onSave, hideClient, detailsOp
       }}
       className="border-b bg-white"
     >
-      <div className="grid min-h-[40px] grid-cols-[1fr_auto_auto_auto] items-center gap-2 px-3 py-1.5 text-sm">
-        <div className="flex items-center gap-1">
+      <div className="grid min-h-[44px] grid-cols-1 items-start gap-2 px-3 py-2 text-sm md:grid-cols-[1fr_auto_auto_auto] md:items-center md:py-1.5">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="text-slate-400">+</span>
           <input
             value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             onKeyDown={(e) => { if (e.key === "Enter") onSave(); }}
             placeholder="הוסף משימה..."
-            className="border-0 bg-transparent text-sm outline-none w-full"
+            className="w-full min-w-0 border-0 bg-transparent text-base outline-none md:text-sm"
           />
         </div>
-        {!hideClient && <select value={draft.clientId} onChange={(e) => setDraft({ ...draft, clientId: e.target.value })} className="rounded-lg border bg-white px-2 py-1 text-xs">
+        {!hideClient && <select value={draft.clientId} onChange={(e) => setDraft({ ...draft, clientId: e.target.value })} className="rounded-lg border bg-white px-2 py-2 text-xs md:py-1">
           <option value="">בחר לקוח</option>
           <option value={GENERAL_CLIENT_ID}>שוטף</option>
           {clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
         </select>}
         <DateRecurringPicker task={draft} onChange={setDraft} />
-        <button type="button" onClick={() => setDetailsOpen(!detailsOpen)} className="rounded-lg border px-2 py-1 text-xs hover:bg-slate-50">פרטים</button>
+        <button type="button" onClick={() => setDetailsOpen(!detailsOpen)} className="rounded-lg border px-3 py-2 text-xs hover:bg-slate-50 md:px-2 md:py-1"},{>פרטים</button>
       </div>
       {detailsOpen && (
         <div className="grid gap-2 border-t bg-slate-50 p-3 text-xs">
